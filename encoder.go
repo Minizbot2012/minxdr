@@ -1,12 +1,10 @@
 package minxdr
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"math"
 	"reflect"
-	"time"
 )
 
 func Marshal(w io.Writer, v interface{}) (int, error) {
@@ -23,12 +21,12 @@ func NewEncoder(w io.Writer) *Encoder {
 
 func (s *Encoder) Encode(v interface{}) (int, error) {
 	if v == nil {
-		return 0, errors.New("Can't marshal nil interface")
+		return 0, fmt.Errorf("can't marshal nil interface")
 	}
 	vf := reflect.ValueOf(v)
 	for vf.Kind() == reflect.Ptr {
 		if vf.IsNil() {
-			return 0, errors.New(fmt.Sprintf("Can't marshal nil pointer %s", vf.Kind().String()))
+			return 0, fmt.Errorf("can't marshal nil pointer %s", vf.Kind().String())
 		}
 		vf = vf.Elem()
 	}
@@ -45,7 +43,7 @@ func (s *Encoder) indirect(v reflect.Value) reflect.Value {
 
 func (s *Encoder) EncodeBool(v bool) (int, error) {
 	i := int32(0)
-	if v == true {
+	if v {
 		i = 1
 	}
 	return s.EncodeInt(i)
@@ -135,7 +133,7 @@ func (s *Encoder) encodeFixedArray(v reflect.Value) (int, error) {
 		if v.CanAddr() {
 			return s.EncodeFixedOpaque(v.Slice(0, v.Len()).Bytes())
 		}
-		slice := make([]byte, v.Len(), v.Len())
+		slice := make([]byte, v.Len())
 		reflect.Copy(reflect.ValueOf(slice), v)
 		return s.EncodeFixedOpaque(slice)
 	}
@@ -203,7 +201,7 @@ func (s *Encoder) encodeStruct(v reflect.Value) (int, error) {
 
 func (s *Encoder) encodeInterface(v reflect.Value) (int, error) {
 	if v.IsNil() || !v.CanInterface() {
-		return 0, errors.New("Cannot encode nil interface")
+		return 0, fmt.Errorf("cannot encode nil interface")
 	}
 
 	// Extract underlying value from the interface and indirect through pointers.
@@ -214,42 +212,39 @@ func (s *Encoder) encodeInterface(v reflect.Value) (int, error) {
 
 func (s *Encoder) encode(v reflect.Value) (int, error) {
 	if !v.IsValid() {
-		return 0, errors.New(fmt.Sprintf("Type %s is invalid", v.Kind().String()))
+		return 0, fmt.Errorf("type %s is invalid", v.Kind().String())
 	}
-	ve := s.indirect(v)
-	if ve.Type().String() == "time.Time" && ve.CanInterface() {
-		viface := ve.Interface()
-		if tv, ok := viface.(time.Time); ok {
-			return s.EncodeString(tv.Format(time.RFC3339Nano))
-		}
+	val := s.indirect(v)
+	if v, ok := customPairs[val.Type().String()]; ok {
+		return v.Encode(s, val)
 	}
-	switch ve.Kind() {
+	switch val.Kind() {
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int:
-		return s.EncodeInt(int32(ve.Int()))
+		return s.EncodeInt(int32(val.Int()))
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint:
-		return s.EncodeUint(uint32(ve.Uint()))
+		return s.EncodeUint(uint32(val.Uint()))
 	case reflect.Int64:
-		return s.EncodeHyper(ve.Int())
+		return s.EncodeHyper(val.Int())
 	case reflect.Uint64:
-		return s.EncodeUhyper(ve.Uint())
+		return s.EncodeUhyper(val.Uint())
 	case reflect.Bool:
-		return s.EncodeBool(ve.Bool())
+		return s.EncodeBool(val.Bool())
 	case reflect.Float32:
-		return s.EncodeFloat(float32(ve.Float()))
+		return s.EncodeFloat(float32(val.Float()))
 	case reflect.Float64:
-		return s.EncodeDouble(ve.Float())
+		return s.EncodeDouble(val.Float())
 	case reflect.String:
-		return s.EncodeString(ve.String())
+		return s.EncodeString(val.String())
 	case reflect.Array:
-		return s.encodeFixedArray(ve)
+		return s.encodeFixedArray(val)
 	case reflect.Slice:
-		return s.encodeArray(ve)
+		return s.encodeArray(val)
 	case reflect.Struct:
-		return s.encodeStruct(ve)
+		return s.encodeStruct(val)
 	case reflect.Map:
-		return s.encodeMap(ve)
+		return s.encodeMap(val)
 	case reflect.Interface:
-		return s.encodeInterface(ve)
+		return s.encodeInterface(val)
 	}
-	return 0, errors.New("Go type is unsupported")
+	return 0, fmt.Errorf("go type %s is unsupported", v.Kind().String())
 }
