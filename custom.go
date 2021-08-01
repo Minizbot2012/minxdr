@@ -27,7 +27,7 @@ func init() {
 //time.Time
 //bytes.Buffer
 
-//timeEncDec implements the time.Time encoding and decoding under XDR string as a RFC3339 nanosecond
+//timeEncDec implements the time.Time encoding and decoding as a XDR string with RFC3339 nanosecond encoding
 type timeEncDec struct {
 }
 
