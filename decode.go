@@ -2,12 +2,10 @@ package minxdr
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"math"
 	"reflect"
-	"time"
 )
 
 func Unmarshal(r io.Reader, v interface{}) (int, error) {
@@ -26,14 +24,14 @@ func NewDecoder(r io.Reader) *Decoder {
 
 func (s *Decoder) Decode(v interface{}) (int, error) {
 	if v == nil {
-		return 0, errors.New("Can't unmarshal to nil")
+		return 0, fmt.Errorf("can't unmarshal to nil")
 	}
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
-		return 0, errors.New("Can't unmarshal to non-pointer value")
+		return 0, fmt.Errorf("can't unmarshal to non-pointer value")
 	}
 	if val.IsNil() && !val.CanSet() {
-		return 0, errors.New("Can't unmarshal to unsettable")
+		return 0, fmt.Errorf("can't unmarshal to unsettable")
 	}
 	return s.decode(val)
 }
@@ -43,7 +41,7 @@ func (s *Decoder) indirect(v reflect.Value) (reflect.Value, error) {
 	for iv.Kind() == reflect.Ptr {
 		isNil := iv.IsNil()
 		if isNil && !iv.CanSet() {
-			return iv, errors.New(fmt.Sprintf("Cannot allocate pointer for type %s", iv.Kind().String()))
+			return iv, fmt.Errorf("cannot allocate pointer for type %s", iv.Kind().String())
 		}
 		if isNil {
 			iv.Set(reflect.New(iv.Type().Elem()))
@@ -64,7 +62,7 @@ func (s *Decoder) DecodeBool() (bool, int, error) {
 	case 1:
 		return true, n, nil
 	default:
-		return false, n, errors.New("Invalid Boolean Value")
+		return false, n, fmt.Errorf("invalid Boolean Value")
 	}
 }
 
@@ -130,7 +128,7 @@ func (s *Decoder) DecodeOpaque() ([]byte, int, error) {
 		return []byte{}, br1, err
 	}
 	data, br2, err := s.DecodeFixedOpaque(int32(len))
-	return data, br1 + br2, nil
+	return data, br1 + br2, err
 }
 
 func (s *Decoder) DecodeFixedOpaque(len int32) ([]byte, int, error) {
@@ -146,8 +144,11 @@ func (s *Decoder) DecodeFixedOpaque(len int32) ([]byte, int, error) {
 
 func (s *Decoder) DecodeString() (string, int, error) {
 	dataLen, br1, err := s.DecodeUint()
+	if err != nil {
+		return "", br1, err
+	}
 	if uint(dataLen) > uint(math.MaxInt32) {
-		return "", br1, errors.New("Max slice exceded")
+		return "", br1, fmt.Errorf("max slice exceded")
 	}
 	data, br2, err := s.DecodeFixedOpaque(int32(dataLen))
 	if err != nil {
@@ -243,7 +244,7 @@ func (s *Decoder) decodeStruct(v reflect.Value) (int, error) {
 			return br, err
 		}
 		if !vf.CanSet() {
-			return br, errors.New(fmt.Sprintf("Cannot decode to unsettable %s", vf.Type().String()))
+			return br, fmt.Errorf("cannot decode to unsettable %s", vf.Type().String())
 		}
 		bri, err := s.decode(vf)
 		br += bri
@@ -256,7 +257,7 @@ func (s *Decoder) decodeStruct(v reflect.Value) (int, error) {
 
 func (s *Decoder) decodeInterface(v reflect.Value) (int, error) {
 	if v.IsNil() && !v.CanInterface() {
-		return 0, errors.New("Cannot decode to nil interface")
+		return 0, fmt.Errorf("cannot decode to nil interface")
 	}
 	ve := reflect.ValueOf(v.Interface())
 	ve, err := s.indirect(ve)
@@ -264,29 +265,22 @@ func (s *Decoder) decodeInterface(v reflect.Value) (int, error) {
 		return 0, err
 	}
 	if !ve.CanSet() {
-		return 0, errors.New(fmt.Sprintf("Can't decode to unsettable %s", ve.Type().String()))
+		return 0, fmt.Errorf("can't decode to unsettable %s", ve.Type().String())
 	}
 	return s.decode(ve)
 }
 
 func (s *Decoder) decode(v reflect.Value) (int, error) {
 	if !v.IsValid() {
-		return 0, errors.New(fmt.Sprintf("Type %s is invalid", v.Kind().String()))
+		return 0, fmt.Errorf("type %s is invalid", v.Kind().String())
 	}
 	val, err := s.indirect(v)
 	if err != nil {
 		return 0, err
 	}
-	if val.Type().String() == "time.Time" {
-		ts, n, err := s.DecodeString()
-		if err != nil {
-			return n, err
-		}
-		ttv, err := time.Parse(time.RFC3339, ts)
-		if err != nil {
-			return n, err
-		}
-		val.Set(reflect.ValueOf(ttv))
+
+	if v, ok := customPairs[val.Type().String()]; ok {
+		return v.Decode(s, val)
 	}
 	switch val.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
@@ -295,7 +289,7 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 			return n, err
 		}
 		if val.OverflowInt(int64(i)) {
-			return n, errors.New(fmt.Sprintf("signed integer too large for %s", val.Kind().String()))
+			return n, fmt.Errorf("signed integer too large for %s", val.Kind().String())
 		}
 		val.SetInt(int64(i))
 		return n, nil
@@ -305,7 +299,7 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 			return n, err
 		}
 		if val.OverflowUint(uint64(i)) {
-			return n, errors.New(fmt.Sprintf("unsigned integer too large for %s", val.Kind().String()))
+			return n, fmt.Errorf("unsigned integer too large for %s", val.Kind().String())
 		}
 		val.SetUint(uint64(i))
 		return n, nil
@@ -384,5 +378,5 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 		}
 		return n, nil
 	}
-	return 0, errors.New(fmt.Sprintf("Unsupported Go type %s", val.Kind().String()))
+	return 0, fmt.Errorf("unsupported Go type %s", val.Kind().String())
 }
