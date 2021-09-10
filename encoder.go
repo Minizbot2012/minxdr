@@ -1,6 +1,7 @@
 package minxdr
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
@@ -59,10 +60,7 @@ func (s *Encoder) EncodeDouble(v float64) (int, error) {
 
 func (s *Encoder) EncodeUint(v uint32) (int, error) {
 	var b [4]byte
-	b[0] = byte(v >> 24)
-	b[1] = byte(v >> 16)
-	b[2] = byte(v >> 8)
-	b[3] = byte(v)
+	binary.BigEndian.PutUint32(b[:], v)
 	n, err := s.w.Write(b[:])
 	if err != nil {
 		return n, err
@@ -77,14 +75,7 @@ func (s *Encoder) EncodeInt(v int32) (int, error) {
 
 func (s *Encoder) EncodeUhyper(v uint64) (int, error) {
 	var b [8]byte
-	b[0] = byte(v >> 56)
-	b[1] = byte(v >> 48)
-	b[2] = byte(v >> 40)
-	b[3] = byte(v >> 32)
-	b[4] = byte(v >> 24)
-	b[5] = byte(v >> 16)
-	b[6] = byte(v >> 8)
-	b[7] = byte(v)
+	binary.BigEndian.PutUint64(b[:], v)
 	return s.w.Write(b[:])
 }
 
