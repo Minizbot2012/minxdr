@@ -1,3 +1,3 @@
-module github.com/minizbot2012/minxdr
+module github.com/Minizbot2012/minxdr
 
 go 1.17
