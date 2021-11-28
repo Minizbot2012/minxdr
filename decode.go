@@ -68,7 +68,7 @@ func (s *Decoder) DecodeBool() (bool, int, error) {
 
 func (s *Decoder) DecodeFloat() (float32, int, error) {
 	b := make([]byte, 4)
-	len, err := io.ReadFull(s.r, b)
+	len, err := s.r.Read(b)
 	if err != nil {
 		return 0.0, len, err
 	}
@@ -78,7 +78,7 @@ func (s *Decoder) DecodeFloat() (float32, int, error) {
 
 func (s *Decoder) DecodeDouble() (float64, int, error) {
 	b := make([]byte, 8)
-	len, err := io.ReadFull(s.r, b)
+	len, err := s.r.Read(b)
 	if err != nil {
 		return 0.0, len, err
 	}
@@ -88,7 +88,7 @@ func (s *Decoder) DecodeDouble() (float64, int, error) {
 
 func (s *Decoder) DecodeUint() (uint32, int, error) {
 	b := make([]byte, 4)
-	v, err := io.ReadFull(s.r, b)
+	v, err := s.r.Read(b)
 	if err != nil {
 		return 0, v, err
 	}
@@ -106,7 +106,7 @@ func (s *Decoder) DecodeInt() (int32, int, error) {
 
 func (s *Decoder) DecodeUhyper() (uint64, int, error) {
 	b := make([]byte, 8)
-	bl, err := io.ReadFull(s.r, b)
+	bl, err := s.r.Read(b)
 	if err != nil {
 		return 0, bl, err
 	}
@@ -135,7 +135,7 @@ func (s *Decoder) DecodeFixedOpaque(len int32) ([]byte, int, error) {
 	pad := (4 - (len % 4)) % 4
 	paddedSize := len + pad
 	b := make([]byte, int(paddedSize))
-	br, err := io.ReadFull(s.r, b)
+	br, err := s.r.Read(b)
 	if err != nil {
 		return []byte{}, br, err
 	}
