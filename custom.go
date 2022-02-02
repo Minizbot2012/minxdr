@@ -43,7 +43,7 @@ func (d *timeEncDec) Decode(s *Decoder, v reflect.Value) (int, error) {
 	if err != nil {
 		return n, err
 	}
-	ttv, err := time.Parse(time.RFC3339, ts)
+	ttv, err := time.Parse(time.RFC3339Nano, ts)
 	if err != nil {
 		return n, err
 	}
