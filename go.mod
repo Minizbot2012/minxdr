@@ -1,3 +1,3 @@
 module github.com/Minizbot2012/minxdr
 
-go 1.17
+go 1.18
