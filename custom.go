@@ -14,7 +14,7 @@ func RegisterRType(typeName string, v EncDecPair) {
 	customPairs[typeName] = v
 }
 
-func RegisterType(v EncodeDecode) {
+func RegisterType(v interface{}) {
 	println("EncDec" + reflect.TypeOf(v).Kind().String())
 	customSPairs[reflect.TypeOf(v).Kind().String()] = reflect.TypeOf(v)
 }
@@ -27,7 +27,6 @@ func init() {
 }
 
 //Default custom types
-//cpkt
 //time.Time
 //bytes.Buffer
 
