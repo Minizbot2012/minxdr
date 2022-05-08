@@ -207,8 +207,8 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 	}
 	val := s.indirect(v)
 
-	println(v.Type().String())
-	if ecdc, ok := val.Addr().Interface().(EncodeDecode); ok {
+	println(v.String())
+	if ecdc, ok := v.Interface().(EncodeDecode); ok {
 		return ecdc.Encode(s)
 	}
 
