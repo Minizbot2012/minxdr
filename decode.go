@@ -286,6 +286,7 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 	if v, ok := customPairs[val.Type().String()]; ok {
 		return v.Decode(s, val)
 	}
+
 	switch val.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 		i, n, err := s.DecodeInt()

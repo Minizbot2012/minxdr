@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-type cpkt struct {
-	Type string
-	Data interface{}
-}
-
 var customPairs map[string]EncDecPair
 var customSPairs map[string]reflect.Type
 
@@ -33,6 +28,7 @@ func init() {
 }
 
 //Default custom types
+//cpkt
 //time.Time
 //bytes.Buffer
 
