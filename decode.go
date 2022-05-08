@@ -12,12 +12,10 @@ func Unmarshal(r io.Reader, v interface{}) (int, error) {
 	return NewDecoder(r).Decode(v)
 }
 
-//Decoder, a pure golang minimal XDR decoder
 type Decoder struct {
 	r io.Reader
 }
 
-//NewDecoder create new XDR decoder
 func NewDecoder(r io.Reader) *Decoder {
 	return &Decoder{r: r}
 }
