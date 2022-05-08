@@ -16,6 +16,7 @@ func RegisterRType(typeName string, v EncDecPair) {
 
 func RegisterType(v interface{}) {
 	if _, ok := v.(EncodeDecode); ok {
+		println("EncDec" + reflect.TypeOf(v).Kind().String())
 		customSPairs[reflect.TypeOf(v).Kind().String()] = reflect.TypeOf(v)
 	}
 }
