@@ -208,13 +208,13 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 	val := s.indirect(v)
 
 	if _, ok := customSPairs[val.Type().String()]; ok {
-		val = val.Elem()
-		val.Interface().(EncodeDecode).Encode(s)
+		v.Interface().(EncodeDecode).Encode(s)
 	}
 
 	if v, ok := customPairs[val.Type().String()]; ok {
 		return v.Encode(s, val)
 	}
+
 	switch val.Kind() {
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int:
 		return s.EncodeInt(int32(val.Int()))
