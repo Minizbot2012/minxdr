@@ -279,7 +279,7 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 		return 0, err
 	}
 
-	if ecdc, ok := val.Interface().(EncodeDecode); ok {
+	if ecdc, ok := v.Interface().(EncodeDecode); ok {
 		return ecdc.Decode(s)
 	}
 
