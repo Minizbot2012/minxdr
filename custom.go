@@ -16,7 +16,7 @@ func RegisterRType(typeName string, v EncDecPair) {
 
 func RegisterType(v interface{}) {
 	println("EncDec" + reflect.TypeOf(v).String())
-	customSPairs[reflect.TypeOf(v).String()[1:]] = reflect.TypeOf(v)
+	customSPairs[reflect.TypeOf(v).String()] = reflect.TypeOf(v)
 }
 
 func init() {
