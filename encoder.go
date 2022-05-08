@@ -205,12 +205,11 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 	if !v.IsValid() {
 		return 0, fmt.Errorf("type %s is invalid", v.Kind().String())
 	}
-
-	if _, ok := customSPairs[v.String()]; ok {
-		v.Interface().(EncodeDecode).Encode(s)
-	}
-
 	val := s.indirect(v)
+
+	if ecdc, ok := v.Interface().(EncodeDecode); ok {
+		return ecdc.Encode(s)
+	}
 
 	if v, ok := customPairs[val.Type().String()]; ok {
 		return v.Encode(s, val)

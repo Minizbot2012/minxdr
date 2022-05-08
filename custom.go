@@ -7,21 +7,14 @@ import (
 )
 
 var customPairs map[string]EncDecPair
-var customSPairs map[string]reflect.Type
 
 //RegisterRType Registers an already existing type to encode / decode
 func RegisterRType(typeName string, v EncDecPair) {
 	customPairs[typeName] = v
 }
 
-func RegisterType(v interface{}) {
-	println("EncDec" + reflect.TypeOf(v).String())
-	customSPairs[reflect.TypeOf(v).String()] = reflect.TypeOf(v)
-}
-
 func init() {
 	customPairs = make(map[string]EncDecPair)
-	customSPairs = make(map[string]reflect.Type)
 	RegisterRType("time.Time", &timeEncDec{})
 	RegisterRType("bytes.Buffer", &byteBufEncDec{})
 }
