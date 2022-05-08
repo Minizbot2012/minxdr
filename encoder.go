@@ -207,9 +207,8 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 	}
 	val := s.indirect(v)
 
-	if ifc, ok := v.Interface().(EncodeDecode); ok {
-		println("CEncode")
-		return ifc.Encode(s)
+	if _, ok := customSPairs[val.Type().Name()]; ok {
+		val.Interface().(EncodeDecode).Encode(s)
 	}
 
 	if v, ok := customPairs[val.Type().String()]; ok {
