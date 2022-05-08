@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-type EncDecPair interface {
-	Encode(*Encoder, reflect.Value) (int, error)
-	Decode(*Decoder, reflect.Value) (int, error)
-}
-
 var customPairs map[string]EncDecPair
 
 func RegisterType(typeName string, v EncDecPair) {
