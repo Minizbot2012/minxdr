@@ -6,16 +6,30 @@ import (
 	"time"
 )
 
-var customPairs map[string]EncDecPair
+type cpkt struct {
+	Type string
+	Data interface{}
+}
 
-func RegisterType(typeName string, v EncDecPair) {
+var customPairs map[string]EncDecPair
+var customSPairs map[string]reflect.Type
+
+//RegisterRType Registers an already existing type to encode / decode
+func RegisterRType(typeName string, v EncDecPair) {
 	customPairs[typeName] = v
+}
+
+func RegisterType(v interface{}) {
+	if _, ok := v.(EncodeDecode); ok {
+		customSPairs[reflect.TypeOf(v).Kind().String()] = reflect.TypeOf(v)
+	}
 }
 
 func init() {
 	customPairs = make(map[string]EncDecPair)
-	RegisterType("time.Time", &timeEncDec{})
-	RegisterType("bytes.Buffer", &byteBufEncDec{})
+	customSPairs = make(map[string]reflect.Type)
+	RegisterRType("time.Time", &timeEncDec{})
+	RegisterRType("bytes.Buffer", &byteBufEncDec{})
 }
 
 //Default custom types
