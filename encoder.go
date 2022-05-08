@@ -206,6 +206,8 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 		return 0, fmt.Errorf("type %s is invalid", v.Kind().String())
 	}
 	val := s.indirect(v)
+
+	println(val.Type().String())
 	if _, ok := customSPairs[val.Type().String()]; ok {
 		val.Interface().(EncodeDecode).Encode(s)
 	}
