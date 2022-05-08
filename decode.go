@@ -274,13 +274,15 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 	if !v.IsValid() {
 		return 0, fmt.Errorf("type %s is invalid", v.Kind().String())
 	}
-	val, err := s.indirect(v)
-	if err != nil {
-		return 0, err
+
+	if _, ok := customSPairs[v.Kind().String()]; ok {
+		return v.Interface().(EncodeDecode).Decode(s)
 	}
 
-	if _, ok := customSPairs[val.Kind().String()]; ok {
-		return val.Interface().(EncodeDecode).Decode(s)
+	val, err := s.indirect(v)
+
+	if err != nil {
+		return 0, err
 	}
 
 	if v, ok := customPairs[val.Type().String()]; ok {
