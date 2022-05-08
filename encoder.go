@@ -207,7 +207,7 @@ func (s *Encoder) encode(v reflect.Value) (int, error) {
 	}
 	val := s.indirect(v)
 
-	if _, ok := customSPairs[val.Elem().Kind().String()]; ok {
+	if _, ok := customSPairs[val.Type().Name()]; ok {
 		val.Interface().(EncodeDecode).Encode(s)
 	}
 
