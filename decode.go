@@ -279,9 +279,9 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 		return 0, err
 	}
 
-	println(val.Type().String())
-	if val.Type().Implements(reflect.TypeOf((*EncodeDecode)(nil)).Elem()) {
-		return val.Interface().(EncodeDecode).Decode(s)
+	println(v.Type().String())
+	if v.Type().Implements(reflect.TypeOf((*EncodeDecode)(nil)).Elem()) {
+		return v.Interface().(EncodeDecode).Decode(s)
 	}
 
 	if v, ok := customPairs[val.Type().String()]; ok {
