@@ -279,7 +279,7 @@ func (s *Decoder) decode(v reflect.Value) (int, error) {
 		return 0, err
 	}
 
-	if v.Type().Implements(reflect.TypeOf((*EncodeDecode)(nil)).Elem()) {
+	if v.Type().Implements(reflect.TypeOf((*EncodeDecode)(nil)).Elem()) || reflect.PointerTo(v.Type()).Implements(reflect.TypeOf((*EncodeDecode)(nil)).Elem()) {
 		return v.Interface().(EncodeDecode).Decode(s)
 	}
 
